@@ -1,6 +1,6 @@
 <?php
 
-namespace Test\PhpRbacBundle\Permission;
+namespace Tests\PhpRbacBundle\Permission;
 
 use Exception;
 use PhpRbacBundle\Core\Manager\PermissionManager;

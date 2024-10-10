@@ -1,22 +1,18 @@
 <?php
 
-namespace Test\PhpRbacBundle\Role;
+namespace Tests\PhpRbacBundle\Role;
 
 use App\Entity\User;
 use PhpRbacBundle\Core\Rbac;
-use App\Repository\UserRepository;
 use PhpRbacBundle\Core\Manager\RoleManager;
 use PhpRbacBundle\Core\Manager\RbacInterface;
 use PhpRbacBundle\Core\Manager\PermissionManager;
 use PhpRbacBundle\Entity\PermissionInterface;
 use PhpRbacBundle\Entity\RoleInterface;
+use Tests\PhpRbacBundle\AbstractTestCase;
 
-class TestUser
+class TestUser extends AbstractTestCase
 {
-    protected static $kernel;
-
-    protected $container;
-
     protected function setUp(): void
     {
         self::$kernel = self::createKernel();
@@ -41,14 +37,14 @@ class TestUser
     public function testAddRole()
     {
         $doctrine = $this->container->get('doctrine');
-        /** @var UserRepository $uRepo */
-        $uRepo = $doctrine->getManager()->getRepository(User::class);
+        $uRepo    = $doctrine->getManager()->getRepository(User::class);
+
         /** @var RoleManager $manager */
         $manager = $this->container->get(RoleManager::class);
         /** @var RbacInterface $rbac */
         $rbac = $this->container->get(Rbac::class);
 
-        $role = $manager->add("editor", "Editor", RoleManager::ROOT_ID);
+        $role = $manager->add("editor", "Editor");
 
         $user = $uRepo->findOneBy(['email' => 'test@test.com']);
         $user->addRbacRole($role);

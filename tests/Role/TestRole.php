@@ -1,6 +1,6 @@
 <?php
 
-namespace Test\PhpRbacBundle\Role;
+namespace Tests\PhpRbacBundle\Role;
 
 use Exception;
 use PhpRbacBundle\Core\Manager\RoleManager;

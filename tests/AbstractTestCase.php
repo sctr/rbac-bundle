@@ -1,20 +1,13 @@
 <?php
 
-namespace Test\PhpRbacBundle;
+namespace Tests\PhpRbacBundle;
 
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-abstract class KernelHelper extends KernelTestCase
+abstract class AbstractTestCase extends KernelTestCase
 {
-    protected static $kernel;
-
-    /**
-     * Container
-     *
-     * @var ContainerInterface
-     */
-    protected $container;
+    protected ContainerInterface $container;
 
     protected function setUp(): void
     {
