@@ -6,27 +6,24 @@ use Exception;
 use PhpRbacBundle\Core\Manager\PermissionManager;
 use PhpRbacBundle\Exception\RbacPermissionNotFoundException;
 use PhpRbacBundle\Repository\PermissionRepository;
+use PhpRbacBundle\Repository\RoleRepository;
+use Tests\PhpRbacBundle\AbstractTestCase;
 
-class TestPermission
+class TestPermission extends AbstractTestCase
 {
-    protected static $kernel;
-
-    protected $container;
-
     protected function setUp(): void
     {
-        self::$kernel = self::createKernel();
-        self::$kernel->boot();
-        $this->container = self::$kernel->getContainer();
+        parent::setUp();
 
-        $this->container->get(PermissionRepository::class)->initTable();
-        $this->container->get(RoleRepository::class)->initTable();
+        $this->getContainer()->get(PermissionRepository::class)->initTable();
+        $this->getContainer()->get(RoleRepository::class)->initTable();
     }
 
     public function testSearchPermission()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
+
         try {
             $permissionId = $manager->getPathId("/");
             $this->assertEquals(PermissionManager::ROOT_ID, $permissionId);
