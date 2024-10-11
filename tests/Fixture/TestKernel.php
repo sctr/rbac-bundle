@@ -3,6 +3,9 @@
 namespace Tests\PhpRbacBundle\Fixture;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Fixture\Entity\User;
+use Fixture\Entity\UserRole;
+use PhpRbacBundle\Entity\Permission;
 use PhpRbacBundle\PhpRbacBundle;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -28,11 +31,34 @@ class TestKernel extends Kernel
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void
     {
+        $container->loadFromExtension('php_rbac', [
+            'no_authentication_section' => [
+                'default' => 'deny',
+            ],
+            'resolve_target_entities' => [
+                'user' => User::class,
+                'role' => UserRole::class,
+                'permission' => Permission::class,
+            ],
+        ]);
+
         $container->loadFromExtension('framework', [
             'http_method_override' => false,
             'secret' => 'S3CRET',
             'router' => ['utf8' => true],
             'test' => true,
+        ]);
+
+        $container->loadFromExtension('security', [
+            'firewalls' => [
+                'dev' => [
+                    'pattern' => '^/',
+                    'lazy' => true,
+                ],
+            ],
+            'access_control' => [
+                ['path' => '/', 'role' => 'ROLE_USER'],
+            ],
         ]);
 
         $container->loadFromExtension('doctrine', [
@@ -44,16 +70,9 @@ class TestKernel extends Kernel
                     'Entity' => [
                         'is_bundle' => false,
                         'type' => 'attribute',
-                        'dir' => '%kernel.project_dir%/tests/Fixture/Entity',
+                        'dir' => '%kernel.project_dir%/Tests/Fixture/Entity',
                         'prefix' => 'Tests\PhpRbacBundle\Fixture\Entity',
                         'alias' => 'Entity',
-                    ],
-                    'Model' => [
-                        'is_bundle' => false,
-                        'type' => 'attribute',
-                        'dir' => '%kernel.project_dir%/tests/Fixture/Model',
-                        'prefix' => 'Tests\PhpRbacBundle\Fixture\Model',
-                        'alias' => 'Model',
                     ],
                 ],
                 'controller_resolver' => ['auto_mapping' => true],

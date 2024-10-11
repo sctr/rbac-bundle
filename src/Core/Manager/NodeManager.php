@@ -129,6 +129,6 @@ abstract class NodeManager implements NodeManagerInterface
 
     public function reset()
     {
-        return $this->repository->reset();
+        $this->repository->reset();
     }
 }
