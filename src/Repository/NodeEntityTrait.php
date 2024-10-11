@@ -2,6 +2,7 @@
 
 namespace PhpRbacBundle\Repository;
 
+use Doctrine\DBAL\ParameterType;
 use PhpRbacBundle\Entity\Node;
 use PhpRbacBundle\Exception\RbacException;
 use PhpRbacBundle\Core\Manager\NodeManagerInterface;
@@ -20,23 +21,23 @@ trait NodeEntityTrait
 
         $dql = "DELETE {$this->getClassName()} node WHERE node.left = :left";
         $query = $entityManager->createQuery($dql);
-        $query->setParameter(":left", $info->getLeft());
+        $query->setParameter(":left", $info->getLeft(), ParameterType::INTEGER);
         $query->execute();
 
         $dql = "UPDATE {$this->getClassName()} node SET node.right = node.right - 1, node.left = node.left - 1 WHERE node.left BETWEEN :left AND :right";
         $query = $entityManager->createQuery($dql);
-        $query->setParameter(":left", $info->getLeft());
-        $query->setParameter(":right", $info->getRight());
+        $query->setParameter(":left", $info->getLeft(), ParameterType::INTEGER);
+        $query->setParameter(":right", $info->getRight(), ParameterType::INTEGER);
         $query->execute();
 
         $dql = "UPDATE {$this->getClassName()} node SET node.right = node.right - 2 WHERE node.right > :right";
         $query = $entityManager->createQuery($dql);
-        $query->setParameter(":right", $info->getRight());
+        $query->setParameter(":right", $info->getRight(), ParameterType::INTEGER);
         $query->execute();
 
         $dql = "UPDATE {$this->getClassName()} node SET node.left = node.left - 2 WHERE node.left > :right";
         $query = $entityManager->createQuery($dql);
-        $query->setParameter(":right", $info->getRight());
+        $query->setParameter(":right", $info->getRight(), ParameterType::INTEGER);
         $query->execute();
 
         return true;
@@ -55,20 +56,20 @@ trait NodeEntityTrait
 
         $dql = "DELETE {$this->getClassName()} node WHERE node.left BETWEEN :left AND :right";
         $query = $entityManager->createQuery($dql);
-        $query->setParameter(":left", $info->getLeft());
-        $query->setParameter(":right", $info->getRight());
+        $query->setParameter(":left", $info->getLeft(), ParameterType::INTEGER);
+        $query->setParameter(":right", $info->getRight(), ParameterType::INTEGER);
         $query->execute();
 
         $dql = "UPDATE {$this->getClassName()} node SET node.right = node.right - :widht WHERE node.right > :right";
         $query = $entityManager->createQuery($dql);
-        $query->setParameter(":width", $width);
-        $query->setParameter(":right", $info->getRight());
+        $query->setParameter(":width", $width, ParameterType::INTEGER);
+        $query->setParameter(":right", $info->getRight(), ParameterType::INTEGER);
         $query->execute();
 
         $dql = "UPDATE {$this->getClassName()} node SET node.left = node.left - :widht WHERE node.left > :right";
         $query = $entityManager->createQuery($dql);
-        $query->setParameter(":width", $width);
-        $query->setParameter(":right", $info->getRight());
+        $query->setParameter(":width", $width, ParameterType::INTEGER);
+        $query->setParameter(":right", $info->getRight(), ParameterType::INTEGER);
         $query->execute();
 
         return true;
@@ -78,8 +79,8 @@ trait NodeEntityTrait
     {
         $pathCmpl = "root" . strtolower($path);
 
-        $tableName = $this->getClassMetadata()
-            ->getTableName();
+        $tableName = $this->getClassMetadata()->getTableName();
+
         $parts = explode("/", $pathCmpl);
         $sql = "
             SELECT
@@ -91,14 +92,14 @@ trait NodeEntityTrait
                 {$tableName} as node ON node.tree_left BETWEEN parent.tree_left AND parent.tree_right
             WHERE
                 node.code = :code
+            AND
+                path = :path
             GROUP BY
                 node.id
-            HAVING
-                path = :path
         ";
 
-        $pdo = $this->getEntityManager()
-            ->getConnection();
+        $pdo = $this->getEntityManager()->getConnection();
+
         $query = $pdo->prepare($sql);
         $finalPart = end($parts);
         $query->bindValue(":code", strtolower($finalPart));
@@ -110,6 +111,7 @@ trait NodeEntityTrait
         }
 
         $row = $result->fetchAssociative();
+
         return $row['id'];
     }
 
@@ -172,6 +174,7 @@ trait NodeEntityTrait
 
         $query = $this->getEntityManager()
             ->createQuery($dql);
+
         $query->setParameter(':nodeId', $nodeId);
         $result = $query->getResult();
 

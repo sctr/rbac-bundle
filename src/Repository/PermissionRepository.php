@@ -2,6 +2,7 @@
 
 namespace PhpRbacBundle\Repository;
 
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\Exception\ORMException;
 use PhpRbacBundle\Entity\Permission;
 use PhpRbacBundle\Entity\RoleInterface;
@@ -38,12 +39,13 @@ class PermissionRepository extends ServiceEntityRepository implements NestedSetI
             ->getTableName();
     }
 
-    public function initTable()
+    public function initTable(): void
     {
         $sql = "SET FOREIGN_KEY_CHECKS = 0; TRUNCATE role_permission; TRUNCATE {$this->tableName}; SET FOREIGN_KEY_CHECKS = 1";
         $this->getEntityManager()
             ->getConnection()
             ->executeQuery($sql);
+
         $sql = "INSERT INTO {$this->tableName} (id, code, description, tree_left, tree_right) VALUES (1, 'root', 'root', 0, 1)";
         $this->getEntityManager()
             ->getConnection()
@@ -57,11 +59,10 @@ class PermissionRepository extends ServiceEntityRepository implements NestedSetI
      */
     public function add(Permission $entity, bool $flush = true): void
     {
-        $this->getEntityManager()
-            ->persist($entity);
+        $this->getEntityManager()->persist($entity);
+
         if ($flush) {
-            $this->getEntityManager()
-                ->flush();
+            $this->getEntityManager()->flush();
         }
     }
 
@@ -71,11 +72,10 @@ class PermissionRepository extends ServiceEntityRepository implements NestedSetI
      */
     public function remove(Permission $entity, bool $flush = true): void
     {
-        $this->getEntityManager()
-            ->remove($entity);
+        $this->getEntityManager()->remove($entity);
+
         if ($flush) {
-            $this->getEntityManager()
-                ->flush();
+            $this->getEntityManager()->flush();
         }
     }
 
@@ -87,6 +87,7 @@ class PermissionRepository extends ServiceEntityRepository implements NestedSetI
     public function getById(int $nodeId): Permission
     {
         $node = $this->find($nodeId);
+
         if (empty($node)) {
             throw new RbacPermissionNotFoundException("Permission {$nodeId} not found");
         }
@@ -127,20 +128,17 @@ class PermissionRepository extends ServiceEntityRepository implements NestedSetI
             WHERE
                 node.tree_left BETWEEN parent.tree_left AND parent.tree_right
                 AND node.tree_left BETWEEN sub_parent.tree_left AND sub_parent.tree_right
-                AND sub_parent.id = sub_tree.id
+                AND sub_parent.id = sub_tree.id AND depth = 1
             GROUP BY
                 node.id
-            HAVING
-                depth = 1
             ORDER BY
                 node.tree_left
         ";
 
         $rsm = new ResultSetMapping();
         $rsm->addEntityResult($this->getClassName(), 'node');
-        $query = $this->getEntityManager()
-            ->createNativeQuery($sql, $rsm);
-        $query->setParameter(':nodeId', $nodeId);
+        $query = $this->getEntityManager()->createNativeQuery($sql, $rsm);
+        $query->setParameter(':nodeId', $nodeId, ParameterType::INTEGER);
 
         $result = $query->getResult();
 
@@ -153,8 +151,7 @@ class PermissionRepository extends ServiceEntityRepository implements NestedSetI
 
     public function hasPermission(int $permissionId, mixed $userId): bool
     {
-        $pdo = $this->getEntityManager()
-            ->getConnection();
+        $pdo = $this->getEntityManager()->getConnection();
 
         $sql = "
             SELECT
@@ -178,14 +175,15 @@ class PermissionRepository extends ServiceEntityRepository implements NestedSetI
         ";
         $query = $pdo->prepare($sql);
         $query->bindValue(":userId", $userId);
-        $query->bindValue(":permissionId", $permissionId);
+        $query->bindValue(":permissionId", $permissionId, ParameterType::INTEGER);
         $stmt = $query->executeQuery();
 
-        if ($stmt->rowCount() == 0) {
+        if ($stmt->rowCount() === 0) {
             return false;
         }
 
         $row = $stmt->fetchAssociative();
+
         return $row['result'] >= 1;
     }
 

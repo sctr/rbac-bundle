@@ -30,14 +30,14 @@ class AccessControlDriver implements EventSubscriberInterface
         ]
     ];
 
-    public function load(array $config)
+    public function load(array $config): void
     {
         $this->config = $config;
     }
 
-    private function checkAttributes(array $attributes, string $controller, string $method = "")
+    private function checkAttributes(array $attributes, string $controller, string $method = ""): void
     {
-        if (empty($attributes)) {
+        if ($attributes === []) {
             return;
         }
 
@@ -59,12 +59,14 @@ class AccessControlDriver implements EventSubscriberInterface
     }
 
 
-    public function onKernelController(ControllerEvent $event)
+    public function onKernelController(ControllerEvent $event): void
     {
         $controllers = $event->getController();
+
         if (!is_array($controllers)) {
             return;
         }
+
         $controller = $controllers[0];
         $method = $controllers[1];
 

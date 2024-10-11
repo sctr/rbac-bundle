@@ -7,6 +7,8 @@ use PhpRbacBundle\Repository\RoleRepository;
 
 /**
  * @property RoleRepository $repository
+ *
+ * @extends NodeManager<RoleInterface>
  */
 class RoleManager extends NodeManager implements RoleManagerInterface
 {

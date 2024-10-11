@@ -2,16 +2,15 @@
 
 use Symfony\Component\Dotenv\Dotenv;
 
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    require __DIR__ . '/vendor/autoload.php';
-} elseif (file_exists(__DIR__ . '/../../autoload.php')) {
-    require __DIR__ . '/../../autoload.php';
-} else {
-    require __DIR__ . '/../../../autoload.php';
-}
+require dirname(__DIR__).'/vendor/autoload.php';
 
-if (file_exists(dirname(__DIR__) . '/config/bootstrap.php')) {
-    require dirname(__DIR__) . '/config/bootstrap.php';
-} elseif (method_exists(Dotenv::class, 'bootEnv')) {
-    (new Dotenv())->bootEnv(dirname(__DIR__) . '/../../../.env');
+// Load cached env vars if the .env.local.php file exists
+// Run "composer dump-env prod" to create it (requires symfony/flex >=1.2)
+if (is_array($env = @include dirname(__DIR__).'/.env.local.php')) {
+    $_ENV += $env;
+} elseif (!class_exists(Dotenv::class)) {
+    throw new RuntimeException('Please run "composer require symfony/dotenv" to load the ".env" files configuring the application.');
+} else {
+    // load all the .env files
+    (new Dotenv())->usePutenv(false)->loadEnv(dirname(__DIR__).'/.env');
 }

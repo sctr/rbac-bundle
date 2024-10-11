@@ -49,6 +49,7 @@ class RbacAddPermissionCommand extends Command
         }
 
         $permissions = [];
+
         foreach ($permissionsTmp as $permission) {
             $pathNodes = $this->permissionRepository->getPath($permission->getId());
             $path = '/'.implode('/', $pathNodes);
@@ -56,6 +57,7 @@ class RbacAddPermissionCommand extends Command
             $path = str_replace('//', '/', $path);
             $permissions[$path] = $permission;
         }
+
         ksort($permissions);
 
         $question = new Question('Enter the code of the permission : ');
@@ -64,7 +66,8 @@ class RbacAddPermissionCommand extends Command
         $description = $helper->ask($input, $output, $question);
         $question = new ChoiceQuestion('Enter the parent of the permission : ', array_keys($permissions), 0);
         $parentPath = $helper->ask($input, $output, $question);
-        $permission = $this->permissionManager->add($code, $description, $permissions[$parentPath]->getId());
+
+        $this->permissionManager->add($code, $description, $permissions[$parentPath]->getId());
 
         return Command::SUCCESS;
     }

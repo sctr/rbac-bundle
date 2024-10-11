@@ -1,32 +1,29 @@
 <?php
 
-namespace Test\PhpRbacBundle\Permission;
+namespace Tests\PhpRbacBundle\Permission;
 
 use Exception;
 use PhpRbacBundle\Core\Manager\PermissionManager;
 use PhpRbacBundle\Exception\RbacPermissionNotFoundException;
 use PhpRbacBundle\Repository\PermissionRepository;
+use PhpRbacBundle\Repository\RoleRepository;
+use Tests\PhpRbacBundle\AbstractTestCase;
 
-class TestPermission
+class TestPermission extends AbstractTestCase
 {
-    protected static $kernel;
-
-    protected $container;
-
     protected function setUp(): void
     {
-        self::$kernel = self::createKernel();
-        self::$kernel->boot();
-        $this->container = self::$kernel->getContainer();
+        parent::setUp();
 
-        $this->container->get(PermissionRepository::class)->initTable();
-        $this->container->get(RoleRepository::class)->initTable();
+        $this->getContainer()->get(PermissionRepository::class)->initTable();
+        $this->getContainer()->get(RoleRepository::class)->initTable();
     }
 
     public function testSearchPermission()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
+
         try {
             $permissionId = $manager->getPathId("/");
             $this->assertEquals(PermissionManager::ROOT_ID, $permissionId);
@@ -38,7 +35,7 @@ class TestPermission
     public function testAddPermission()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
 
         $permission = $manager->add("Notepad", "Notepad", PermissionManager::ROOT_ID);
 
@@ -60,7 +57,7 @@ class TestPermission
     public function testAddDoublePermission()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
 
         $permission1 = $manager->add("Notepad", "Notepad", PermissionManager::ROOT_ID);
         $permission2 = $manager->add("Notepad", "Notepad", PermissionManager::ROOT_ID);
@@ -74,7 +71,7 @@ class TestPermission
     public function testAddSubPermission()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
 
         $permission = $manager->add("notepad", "Notepad", PermissionManager::ROOT_ID);
         $subPermission = $manager->add("todolist", "Todo list", $permission->getId());
@@ -90,7 +87,7 @@ class TestPermission
     public function testAddDoubleSubPermission()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
 
         $permission = $manager->add("notepad", "Notepad", PermissionManager::ROOT_ID);
         $subPermission1 = $manager->add("todolist", "Todo list", $permission->getId());
@@ -101,7 +98,7 @@ class TestPermission
     public function testAddPath()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
 
         $permission = $manager->addPath("/notepad/todolist/read", ['notepad' => 'Notepad', 'todolist' => "Todo list", "read" => "Read Access"]);
         $this->assertGreaterThan(0, $permission->getId());
@@ -119,7 +116,7 @@ class TestPermission
     public function testPath()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
 
         $manager->addPath("/notepad/todolist/read", ['notepad' => 'Notepad', 'todolist' => "Todo list", "read" => "Read Access"]);
         $id = $manager->getPathId("/notepad/todolist/read");
@@ -129,7 +126,7 @@ class TestPermission
     public function testGetById()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
         $this->expectException(RbacPermissionNotFoundException::class);
         $id = $manager->getNode(2);
     }
@@ -137,14 +134,14 @@ class TestPermission
     public function testGetPathId()
     {
         /** @var PermissionManager $manager */
-        $manager = $this->container->get(PermissionManager::class);
+        $manager = $this->getContainer()->get(PermissionManager::class);
         $this->expectException(RbacPermissionNotFoundException::class);
         $id = $manager->getPathId("/notepad/todolist/read");
     }
 
     public function tearDown(): void
     {
-        $this->container->get(PermissionRepository::class)->initTable();
-        $this->container->get(RoleRepository::class)->initTable();
+        $this->getContainer()->get(PermissionRepository::class)->initTable();
+        $this->getContainer()->get(RoleRepository::class)->initTable();
     }
 }
