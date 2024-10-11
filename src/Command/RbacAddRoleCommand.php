@@ -64,7 +64,8 @@ class RbacAddRoleCommand extends Command
         $description = $helper->ask($input, $output, $question);
         $question = new ChoiceQuestion('Enter the parent of the role : ', array_keys($roles), 0);
         $parentPath = $helper->ask($input, $output, $question);
-        $role = $this->roleManager->add($code, $description, $roles[$parentPath]->getId());
+
+        $this->roleManager->add($code, $description, $roles[$parentPath]->getId());
 
         return Command::SUCCESS;
     }

@@ -24,7 +24,7 @@ class RbacVoter extends Voter
         }
 
         try {
-            return $this->rbacManager->hasPermission($attribute, $user->getId());
+            return $this->rbacManager->hasPermission($attribute, $user->getUserIdentifier());
         } catch (Exception) {
             return false;
         }

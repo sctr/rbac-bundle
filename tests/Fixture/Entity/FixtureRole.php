@@ -8,7 +8,7 @@ use PhpRbacBundle\Repository\RoleRepository;
 
 #[ORM\Entity(repositoryClass: RoleRepository::class)]
 #[ORM\Table('user_roles')]
-class UserRole extends Role
+class FixtureRole extends Role
 {
 
 }

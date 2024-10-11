@@ -7,6 +7,8 @@ use PhpRbacBundle\Entity\PermissionInterface;
 
 /**
  * @property PermissionRepository $repository
+ *
+ * @extends NodeManager<PermissionInterface>
  */
 class PermissionManager extends NodeManager implements PermissionManagerInterface
 {

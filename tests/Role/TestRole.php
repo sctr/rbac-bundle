@@ -8,27 +8,22 @@ use PhpRbacBundle\Repository\RoleRepository;
 use PhpRbacBundle\Core\Manager\PermissionManager;
 use PhpRbacBundle\Repository\PermissionRepository;
 use PhpRbacBundle\Exception\RbacRoleNotFoundException;
+use PHPUnit\Framework\Attributes\Depends;
+use Tests\PhpRbacBundle\AbstractTestCase;
 
-class TestRole
+class TestRole extends AbstractTestCase
 {
-    protected static $kernel;
-
-    protected $container;
-
     protected function setUp(): void
     {
-        self::$kernel = self::createKernel();
-        self::$kernel->boot();
-        $this->container = self::$kernel->getContainer();
-
-        $this->container->get(PermissionRepository::class)->initTable();
-        $this->container->get(RoleRepository::class)->initTable();
+        $this->getContainer()->get(PermissionRepository::class)->initTable();
+        $this->getContainer()->get(RoleRepository::class)->initTable();
     }
 
-    public function testSearchRole()
+    public function testSearchRole(): void
     {
         /** @var RoleManager $manager */
-        $manager = $this->container->get(RoleManager::class);
+        $manager = $this->getContainer()->get(RoleManager::class);
+
         try {
             $roleId = $manager->getPathId("/");
             $this->assertEquals(RoleManager::ROOT_ID, $roleId);
@@ -37,10 +32,10 @@ class TestRole
         }
     }
 
-    public function testAddRole()
+    public function testAddRole(): void
     {
         /** @var RoleManager $manager */
-        $manager = $this->container->get(RoleManager::class);
+        $manager = $this->getContainer()->get(RoleManager::class);
 
         $role = $manager->add("Editor", "Editor", RoleManager::ROOT_ID);
         $this->assertGreaterThan(0, $role->getId());
@@ -58,10 +53,10 @@ class TestRole
     /**
      * @depends testAddRole
      */
-    public function testAddDoubleRole()
+    public function testAddDoubleRole(): void
     {
         /** @var RoleManager $manager */
-        $manager = $this->container->get(RoleManager::class);
+        $manager = $this->getContainer()->get(RoleManager::class);
 
         $role1 = $manager->add("Editor", "Editor", RoleManager::ROOT_ID);
         $role2 = $manager->add("Editor", "Editor", RoleManager::ROOT_ID);
@@ -69,13 +64,11 @@ class TestRole
         $this->assertSame($role1->getId(), $role2->getId());
     }
 
-    /**
-     * @depends testAddRole
-     */
-    public function testAddSubRole()
+    #[Depends('testAddRole')]
+    public function testAddSubRole(): void
     {
         /** @var RoleManager $manager */
-        $manager = $this->container->get(RoleManager::class);
+        $manager = $this->getContainer()->get(RoleManager::class);
 
         $role = $manager->add("Editor", "Editor", RoleManager::ROOT_ID);
         $subRole = $manager->add("reviewer", "Reviewer", $role->getId());
@@ -85,13 +78,11 @@ class TestRole
         $this->assertLessThan($role->getRight(), $subRole->getRight(), "Error Right {$role->getRight()} {$subRole->getRight()}");
     }
 
-    /**
-     * @depends testAddSubRole
-     */
-    public function testAddDoubleSubRole()
+    #[Depends('testAddSubRole')]
+    public function testAddDoubleSubRole(): void
     {
         /** @var RoleManager $manager */
-        $manager = $this->container->get(RoleManager::class);
+        $manager = $this->getContainer()->get(RoleManager::class);
 
         $role = $manager->add("Editor", "Editor", RoleManager::ROOT_ID);
         $subRole1 = $manager->add("reviewer", "Reviewer", $role->getId());
@@ -99,13 +90,11 @@ class TestRole
         $this->assertSame($subRole1->getId(), $subRole2->getId());
     }
 
-    /**
-     * @depends testAddRole
-     */
+    #[Depends('testAddRole')]
     public function testAddPath()
     {
         /** @var RoleManager $manager */
-        $manager = $this->container->get(RoleManager::class);
+        $manager = $this->getContainer()->get(RoleManager::class);
 
         $role = $manager->addPath("/editor/reviewer", ['editor' => 'Editor', 'reviewer' => "Reviewer"]);
         $this->assertGreaterThan(0, $role->getId());
@@ -120,10 +109,10 @@ class TestRole
         $this->assertLessThan($role->getRight(), $subRole->getRight(), "Error Right {$role->getRight()} {$subRole->getRight()}");
     }
 
-    public function testPath()
+    public function testPath(): void
     {
         /** @var RoleManager $manager */
-        $manager = $this->container->get(RoleManager::class);
+        $manager = $this->getContainer()->get(RoleManager::class);
 
         $manager->addPath("/editor/reviewer", ['editor' => 'Editor', 'reviewer' => "Reviewer"]);
         $id = $manager->getPathId("/editor/reviewer");
@@ -133,7 +122,7 @@ class TestRole
     public function testGetById()
     {
         /** @var RoleManager $manager */
-        $manager = $this->container->get(RoleManager::class);
+        $manager = $this->getContainer()->get(RoleManager::class);
         $this->expectException(RbacRoleNotFoundException::class);
         $id = $manager->getNode(2);
         $this->expectException(RbacRoleNotFoundException::class);
@@ -151,13 +140,13 @@ class TestRole
     public function testAssign()
     {
         /** @var PermissionManager $pManager */
-        $pManager = $this->container->get(PermissionManager::class);
+        $pManager = $this->getContainer()->get(PermissionManager::class);
 
         $pManager->addPath("/notepad/todolist/read", ['notepad' => 'Notepad', 'todolist' => "Todo list", "read" => "Read Access"]);
         $pManager->addPath("/notepad/todolist/write", ['notepad' => 'Notepad', 'todolist' => "Todo list", "write" => "Write Access"]);
 
         /** @var RoleManager $rManager */
-        $rManager = $this->container->get(RoleManager::class);
+        $rManager = $this->getContainer()->get(RoleManager::class);
         $rManager->addPath("/editor/reviewer", ['editor' => 'Editor', 'reviewer' => "Reviewer"]);
 
         $editorId = $rManager->getPathId("/editor");
@@ -185,16 +174,16 @@ class TestRole
         $this->assertFalse($rManager->hasPermission($reviewer->getId(), $perm2));
     }
 
-    public function testUnassign()
+    public function testUnassign(): void
     {
         /** @var PermissionManager $pManager */
-        $pManager = $this->container->get(PermissionManager::class);
+        $pManager = $this->getContainer()->get(PermissionManager::class);
 
         $pManager->addPath("/notepad/todolist/read", ['notepad' => 'Notepad', 'todolist' => "Todo list", "read" => "Read Access"]);
         $pManager->addPath("/notepad/todolist/write", ['notepad' => 'Notepad', 'todolist' => "Todo list", "write" => "Write Access"]);
 
         /** @var RoleManager $rManager */
-        $rManager = $this->container->get(RoleManager::class);
+        $rManager = $this->getContainer()->get(RoleManager::class);
         $rManager->addPath("/editor/reviewer", ['editor' => 'Editor', 'reviewer' => "Reviewer"]);
 
         $editorId = $rManager->getPathId("/editor");
@@ -216,7 +205,7 @@ class TestRole
 
     public function tearDown(): void
     {
-        $this->container->get(PermissionRepository::class)->initTable();
-        $this->container->get(RoleRepository::class)->initTable();
+        $this->getContainer()->get(PermissionRepository::class)->initTable();
+        $this->getContainer()->get(RoleRepository::class)->initTable();
     }
 }

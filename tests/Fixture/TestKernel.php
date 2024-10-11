@@ -3,7 +3,7 @@
 namespace Tests\PhpRbacBundle\Fixture;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use Fixture\Entity\User;
+use Fixture\Entity\FixtureUser;
 use Fixture\Entity\UserRole;
 use PhpRbacBundle\Entity\Permission;
 use PhpRbacBundle\PhpRbacBundle;
@@ -36,7 +36,7 @@ class TestKernel extends Kernel
                 'default' => 'deny',
             ],
             'resolve_target_entities' => [
-                'user' => User::class,
+                'user' => FixtureUser::class,
                 'role' => UserRole::class,
                 'permission' => Permission::class,
             ],

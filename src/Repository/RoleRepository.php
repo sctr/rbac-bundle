@@ -2,6 +2,7 @@
 
 namespace PhpRbacBundle\Repository;
 
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\Exception\ORMException;
 use PhpRbacBundle\Entity\Role;
 use PhpRbacBundle\Entity\RoleInterface;
@@ -37,7 +38,7 @@ class RoleRepository extends ServiceEntityRepository implements NestedSetInterfa
             ->getTableName();
     }
 
-    public function initTable()
+    public function initTable(): void
     {
         $sql = "SET FOREIGN_KEY_CHECKS = 0; TRUNCATE user_role; TRUNCATE role_permission; TRUNCATE {$this->tableName};SET FOREIGN_KEY_CHECKS = 1;";
         $this->getEntityManager()
@@ -57,9 +58,10 @@ class RoleRepository extends ServiceEntityRepository implements NestedSetInterfa
      */
     public function add(Role $entity, bool $flush = true): void
     {
-        $this->_em->persist($entity);
+        $this->getEntityManager()->persist($entity);
+
         if ($flush) {
-            $this->_em->flush();
+            $this->getEntityManager()->flush();
         }
     }
 
@@ -69,9 +71,10 @@ class RoleRepository extends ServiceEntityRepository implements NestedSetInterfa
      */
     public function remove(Role $entity, bool $flush = true): void
     {
-        $this->_em->remove($entity);
+        $this->getEntityManager()->remove($entity);
+
         if ($flush) {
-            $this->_em->flush();
+            $this->getEntityManager()->flush();
         }
     }
 
@@ -83,6 +86,7 @@ class RoleRepository extends ServiceEntityRepository implements NestedSetInterfa
     public function getById(int $nodeId): Role
     {
         $node = $this->find($nodeId);
+
         if (empty($node)) {
             throw new RbacRoleNotFoundException();
         }
@@ -123,11 +127,9 @@ class RoleRepository extends ServiceEntityRepository implements NestedSetInterfa
             WHERE
                 node.tree_left BETWEEN parent.tree_left AND parent.tree_right
                 AND node.tree_left BETWEEN sub_parent.tree_left AND sub_parent.tree_right
-                AND sub_parent.id = sub_tree.id
+                AND sub_parent.id = sub_tree.id AND depth = 1
             GROUP BY
                 node.id
-            HAVING
-                depth = 1
             ORDER BY
                 node.tree_left
         ";
@@ -136,7 +138,7 @@ class RoleRepository extends ServiceEntityRepository implements NestedSetInterfa
         $rsm->addEntityResult($this->getClassName(), 'node');
         $query = $this->getEntityManager()
             ->createNativeQuery($sql, $rsm);
-        $query->setParameter(':nodeId', $nodeId);
+        $query->setParameter(':nodeId', $nodeId, ParameterType::INTEGER);
 
         $result = $query->getResult();
 
@@ -185,15 +187,16 @@ class RoleRepository extends ServiceEntityRepository implements NestedSetInterfa
                     )
         ";
         $query = $pdo->prepare($sql);
-        $query->bindValue(":roleId", $roleId);
-        $query->bindValue(":permissionId", $permissionId);
+        $query->bindValue(":roleId", $roleId, ParameterType::INTEGER);
+        $query->bindValue(":permissionId", $permissionId, ParameterType::INTEGER);
         $stmt = $query->executeQuery();
 
-        if ($stmt->rowCount() == 0) {
+        if ($stmt->rowCount() === 0) {
             return false;
         }
 
         $row = $stmt->fetchAssociative();
+
         return $row['result'] >= 1;
     }
 
@@ -215,10 +218,11 @@ class RoleRepository extends ServiceEntityRepository implements NestedSetInterfa
                 user_role.user_id = :userId AND TR.ID = :roleId
         ";
         $query = $pdo->prepare($sql);
-        $query->bindValue(":roleId", $roleId);
+        $query->bindValue(":roleId", $roleId, ParameterType::INTEGER);
         $query->bindValue(":userId", $userId);
         $stmt = $query->executeQuery();
-        if ($stmt->rowCount() == 0) {
+
+        if ($stmt->rowCount() === 0) {
             return false;
         }
 

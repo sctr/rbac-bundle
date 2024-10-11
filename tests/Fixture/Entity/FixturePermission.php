@@ -8,7 +8,7 @@ use PhpRbacBundle\Repository\PermissionRepository;
 
 #[ORM\Entity(repositoryClass: PermissionRepository::class)]
 #[ORM\Table('user_permissions')]
-class UserPermission extends Permission
+class FixturePermission extends Permission
 {
 
 }

@@ -6,7 +6,11 @@ use PhpRbacBundle\Entity\NodeInterface;
 use PhpRbacBundle\Exception\RbacException;
 use PhpRbacBundle\Repository\RoleRepository;
 use PhpRbacBundle\Repository\PermissionRepository;
+use Symfony\Component\TypeInfo\Type;
 
+/**
+ * @template T of NodeInterface
+ */
 abstract class NodeManager implements NodeManagerInterface
 {
     public function __construct(protected RoleRepository|PermissionRepository $repository)
@@ -29,6 +33,9 @@ abstract class NodeManager implements NodeManagerInterface
         }
     }
 
+    /**
+     * @return NodeInterface<T>
+     */
     public function addPath(string $path, array $descriptions): NodeInterface
     {
         if ($path[0] !== '/') {
@@ -64,17 +71,24 @@ abstract class NodeManager implements NodeManagerInterface
 
     public function getPathId(string $path): int
     {
-        if (substr($path, -1) == "/") {
+        if (str_ends_with($path, '/')) {
             $path = substr($path, 0, strlen($path) - 1);
         }
+
         return $this->repository->getPathId($path);
     }
 
+    /**
+     * @return T
+     */
     public function getNode(int $nodeId): NodeInterface
     {
         return $this->repository->getById($nodeId);
     }
 
+    /**
+     * @return T
+     */
     public function updateNode(int $nodeId, string $code, string $description): NodeInterface
     {
         $node = $this->getNode($nodeId);
@@ -94,8 +108,8 @@ abstract class NodeManager implements NodeManagerInterface
             return "/";
         }
         foreach ($nodes as $node) {
-            if ($node->getId() != self::ROOT_ID) {
-                $path .= "/" . $node->getCode();
+            if ($node->getId() !== self::ROOT_ID) {
+                $path .= '/'.$node->getCode();
             }
         }
 
@@ -107,6 +121,9 @@ abstract class NodeManager implements NodeManagerInterface
         return $this->repository->getChildren($nodeId);
     }
 
+    /**
+     * @return list<T>
+     */
     public function getParents(int $nodeId): array
     {
         return $this->repository->getPath($nodeId);
@@ -117,6 +134,9 @@ abstract class NodeManager implements NodeManagerInterface
         return count($this->repository->getPath($nodeId));
     }
 
+    /**
+     * @return T
+     */
     public function getParent(int $nodeId): NodeInterface
     {
         $nodes = $this->repository->getPath($nodeId);
@@ -127,7 +147,7 @@ abstract class NodeManager implements NodeManagerInterface
         return $nodes[count($nodes) - 2];
     }
 
-    public function reset()
+    public function reset(): void
     {
         $this->repository->reset();
     }

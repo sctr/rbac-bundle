@@ -8,9 +8,9 @@ use PhpRbacBundle\Entity\UserRoleTrait;
 
 #[
     ORM\Entity,
-    ORM\Table(name: 'customers'),
+    ORM\Table(name: 'users'),
 ]
-class User
+class FixtureUser
 {
     use UserRoleTrait;
 
